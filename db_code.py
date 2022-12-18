@@ -13,7 +13,8 @@ select_ids = """SELECT DISTINCT profile_id from devices"""
 
 
 async def db_delete_duplicates(conn):
-    ids = await conn.fetch(select_ids)
+    ids = await conn.fetch(select_ids) # Вычленяю все уникальные id профилей
     for i in range(len(ids)):
-        id = int(str(ids[i]).split('=')[1].replace('>', ''))
+        id = int(str(ids[i]).split('=')[1].replace('>', '')) # Перевожу уникальные id в int
+        # Для каждого id профиля оставляю лишь последнее по exp_date устройство
         await conn.execute(deactivate_duplicates, id)
