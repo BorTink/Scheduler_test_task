@@ -7,7 +7,8 @@ from db_code import *
 
 
 async def main():
-    conn = await asyncpg.connect(db_link)
+    conn = await asyncpg.connect(user=config['user'], host=config['host'], port=config['port'], password=config['password'],
+                                            database=config['database'])
     try:
         await conn.execute(deactivate_expired)
         logger.debug('Successfuly deactivated expired devices')
