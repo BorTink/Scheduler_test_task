@@ -8,7 +8,7 @@ from db_code import *
 
 async def main():
     conn = await asyncpg.connect(user=config['user'], host=config['host'], port=config['port'], password=config['password'],
-                                            database=config['database'])
+                                            database=config['database']) # Коннектимся к DB через указаные в auth.py атрибуты
     try:
         await conn.execute(deactivate_expired)
         logger.debug('Successfuly deactivated expired devices')
@@ -34,9 +34,11 @@ def run_loop():
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
 
+
+# Настройка schedule-скрипта, который раз в промежуток времени,
+# указанный в auth.py выполняет выше написанные функции
+
+
 schedule.every(seconds_amount).seconds.do(run_loop)
-
-
-
 while True:
     schedule.run_pending()
