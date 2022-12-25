@@ -2,30 +2,38 @@ import asyncpg
 from loguru import logger
 import asyncio
 import schedule
-from auth import *
-from db_code import *
+from auth import seconds_amount, config
+from db_code import db_delete_expired_empty_devices, db_deactivate_expired, db_deactivate_duplicates
 
 
 async def main():
     conn = await asyncpg.connect(user=config['user'], host=config['host'], port=config['port'], password=config['password'],
                                             database=config['database']) # Коннектимся к DB через указаные в auth.py атрибуты
+    logger.debug('Deactivating expired devices')
     try:
-        await conn.execute(deactivate_expired)
-        logger.debug('Successfuly deactivated expired devices')
+        result = await db_deactivate_expired(conn)
+        result = list(result)[0]
+        ans = str(result) + ' devices were successfully deactivated'
+        logger.info(ans)
     except Exception as e:
-        logger.error(str(e))
+        logger.error(f'Error while deactivating expired devices - {str(e)}')
 
+    logger.debug('Deleting expired devices with no instance_id')
     try:
-        await conn.execute(delete_exp_duplicates)
-        logger.debug('Successfully deleted expired duplicates')
+        result = await db_delete_expired_empty_devices(conn)
+        result = list(result)[0]
+        ans = str(result) + ' expired empty devices were successfully deleted'
+        logger.info(ans)
     except Exception as e:
-        logger.error(str(e))
+        logger.error(f'Error while deleting expired devices with no instance_id - {str(e)}')
 
+    logger.debug('Deactivating user duplicates')
     try:
-        await db_delete_duplicates(conn)
-        logger.debug('Successfully deleted duplicates on every user`s account')
+        result = await db_deactivate_duplicates(conn)
+        ans = str(result[0]) + ' user duplicates were deactivated from ' + str(result[1]) + ' profiles'
+        logger.info(ans)
     except Exception as e:
-        logger.error(str(e))
+        logger.error(f'Error while deactivating user duplicates - {str(e)}')
 
     await conn.close()
 
